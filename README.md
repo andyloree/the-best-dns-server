@@ -2,7 +2,7 @@
 Example Ansible role configures Unbound local & recursive DNS + PiHole setup, generating internal network DNS zone files for all types of DNS configurations (root A record, DNS round-robin,...) making it simple to manage declariative DNS for your private network needs.  This is not fully spit and polished, feel free to PR or issue if you would like to suggest enhancements.
 
 ## Configuration notes
-PiHole is configured to listen on port 53, with forward resolution to local Unbound recursive DNS service listening on port 5353.  Using jinj2 templates, and variable, this allows for declarative DNS zones.  Below are examples for a few different types of zone usages.
+PiHole is configured to listen on port 53, with forward resolution to local Unbound recursive DNS service listening on port 5353.  Using jinj2 templates and variables, this allows for declarative DNS zones from git.  Below are examples for a few different types of zone usages.
 
 **Security note**: No password is configured for PiHole, but can be configured in setupVars.conf.j2 template, using `pihole -a -p`.  I don't see a very good idempotent way to manage its password generation, but also didn't dig very hard.
 
