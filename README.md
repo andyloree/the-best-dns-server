@@ -7,7 +7,7 @@ PiHole is configured to listen on port 53, with forward resolution to local Unbo
 **Security note**: No password is configured for PiHole, but can be configured in setupVars.conf.j2 template, using `pihole -a -p`.  I don't see a very good idempotent way to manage its password generation, but also didn't dig very hard.
 
 ## Usage examples
-You can have multiple sub-domains/zones for different purposes (e.g. K8s resolving `*.apps.mydomain.local`) for reverse proxy/traffic management services.
+You can have multiple sub-domains/zones for different purposes (e.g. K8s resolving `*.apps.mydomain.local`) for reverse proxy/traffic management services.  Below are the three variable configurations that drive DNS zone file creation.  Unbound will restart after zone file is created/updated, so you might want to run this in a play with `serial: 1` to ensure you only update one DNS server at a time/don't leave all of your DNS servers in a broken state.
 
 ```yaml
 # Private network address spaces for your network
@@ -66,3 +66,34 @@ local_zones:
       ]
     }
 ```
+
+Example playbook usage, define multiple DNS servers in a group named `dns`.
+
+```yaml
+---
+- hosts: dns
+  become: yes
+  serial: 1   # one host at a time
+
+  roles:
+    - some-other-role
+    - role: dnsserver
+      tags: [ 'update_dns' ]
+
+  tasks:
+    - name: Update pihole
+      shell: pihole -up
+      tags: [ 'never', 'update_pihole' ]
+```
+
+You can selectively update pi-hole via tags parameter:
+
+```bash
+ansible-playbook dnsserver.yml --tags update_dns
+```
+will run only the dnsserver role, updating zone files and restarting DNS services.
+
+```bash
+ansible-playbook dnsserver.yml --tags update_pihole
+```
+will update the pi-hole binary installation.
