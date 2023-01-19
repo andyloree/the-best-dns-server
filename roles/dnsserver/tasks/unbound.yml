@@ -1,0 +1,43 @@
+---
+- name: Install prereqs and Unbound
+  apt:
+    name:
+      - bind9-utils
+      - dnsutils
+      - net-tools
+      - unbound
+      
+- name: Setup local DNS zone files
+  include_tasks: zonefile.yml
+  loop: "{{ local_zones }}"
+  loop_control:
+    loop_var: zone
+  when: private_domain_root | length > 0
+
+- name: Copy Unbound conf
+  template:
+    src: "../templates/unbound.conf.j2"
+    dest: "/etc/unbound/unbound.conf.d/unbound.conf"
+    validate: unbound-checkconf %s
+  notify: Restart Unbound
+
+- name: Update zone file {{ zone }}
+  template:
+    src: "../templates/local-zones.conf.j2"
+    dest: "/etc/unbound/unbound.conf.d/local-zones.conf"
+    validate: unbound-checkconf %s
+  when: private_domain_root | length > 0
+  notify: Restart Unbound
+
+- name: Remove local DNS zone file if exists
+  file:
+    path: "/etc/unbound/unbound.conf.d/local-zones.conf"
+    state: absent
+  when: private_domain_root | length == 0
+  notify: Restart Unbound
+
+- name: Stop and disable systemd-resolved
+  service:
+    name: systemd-resolved
+    state: stopped
+    enabled: false

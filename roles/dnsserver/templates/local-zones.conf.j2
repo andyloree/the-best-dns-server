@@ -1,0 +1,14 @@
+server:
+    {% for net in recursive_dns_local_networks %}
+    private-address: {{ net.network }}
+    {% endfor %}
+
+    # Allow the domain (and its subdomains) to contain private addresses
+    private-domain: "{{ private_domain_root }}"
+
+    # Zone files
+    {% for zone in local_zones %}
+    auth-zone:
+        name: {{ zone.name }}
+        zonefile: /etc/unbound/zones/{{ zone.name }}.zone
+    {% endfor %}

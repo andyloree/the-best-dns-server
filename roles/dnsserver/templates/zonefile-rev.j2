@@ -1,0 +1,14 @@
+$TTL  86400 ; 24 hours
+$ORIGIN {{ zone.name }}
+@ 1D IN SOA @ root (
+    1   ; serial number
+    3H  ; refresh
+    15  ; retry
+    1w  ; expire
+    3h  ; minimum
+    )
+@ 1D IN NS @
+
+{% for A in zone.A %}
+{{ A.name }} IN  A {{ A.ip }}
+{% endfor %}

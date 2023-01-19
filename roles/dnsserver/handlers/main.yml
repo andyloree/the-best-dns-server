@@ -1,0 +1,18 @@
+---
+- name: Restart Unbound
+  service:
+    name: unbound
+    state: restarted
+
+- name: Restart pihole-FTL
+  service:
+    name: pihole-FTL
+    state: restarted
+
+- name: Restart Unbound and pi-hole
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - unbound
+    - pihole-FTL

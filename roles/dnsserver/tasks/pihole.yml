@@ -1,0 +1,41 @@
+---
+- name: Check Pihole is already installed
+  stat:
+    path: /usr/local/bin/pihole
+  register: pihole_bin
+
+- name: Install Pihole
+  block:
+    - name: Minimum clone Pihole
+      git:
+        repo: https://github.com/pi-hole/pi-hole.git
+        depth: 1
+        dest: /tmp/pihole
+    - name: Create /etc/pihole
+      file:
+        path: "/etc/pihole"
+        state: directory
+    - name: Copy setupVars.conf
+      template:
+        src: "../templates/setupVars.conf.j2"
+        dest: "/etc/pihole/setupVars.conf"
+    - name: Run basic install --unattended
+      shell: |
+        cd /tmp/pihole/automated\ install/
+        source /etc/pihole/setupVars.conf
+        bash basic-install.sh --unattended
+  when: not pihole_bin.stat.exists
+
+- name: Disable rate limit
+  lineinfile:
+    dest: "/etc/pihole/pihole-FTL.conf"
+    line: "RATE_LIMIT=0/0"
+    regex: "^RATE_LIMIT"
+  notify: Restart pihole-FTL
+
+- name: Set max packet size for dnsmasq.d
+  lineinfile:
+    dest: /etc/dnsmasq.d/99-edns.conf
+    line: "edns-packet-max=1232"
+    create: yes
+  notify: Restart pihole-FTL
